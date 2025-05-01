@@ -48,6 +48,13 @@ public class Utils {
 
     private static final String TAG = "Utils";
 
+    private static String mCodename;
+    private static String mMaintainer;
+    private static String mSupport;
+    private static String mChangelog;
+    private static String mDevice;
+    private static String mZiptype;
+
     private Utils() {
     }
 
@@ -74,38 +81,57 @@ public class Utils {
     // used to initialize UpdateInfo objects
     private static UpdateInfo parseJsonUpdate(JSONObject object) throws JSONException {
         Update update = new Update();
-        update.setTimestamp(object.getLong("datetime"));
+        update.setTimestamp(object.getLong("timestamp"));
         update.setName(object.getString("filename"));
-        update.setDownloadId(object.getString("id"));
-        update.setType(object.getString("romtype"));
+        update.setDownloadId(object.getString("md5"));
+        update.setType(object.getString("buildtype"));
         update.setFileSize(object.getLong("size"));
-        update.setDownloadUrl(object.getString("url"));
+        update.setDownloadUrl(object.getString("download"));
         update.setVersion(object.getString("version"));
+        mCodename = object.getString("codename");
+        mMaintainer = object.getString("maintainer");
+        mSupport = object.getString("forum");
+        mChangelog = object.getString("changelogs");
+        mDevice = object.getString("device");
+        mZiptype = object.getString("buildtype");
         return update;
     }
 
     public static boolean isCompatible(UpdateBaseInfo update) {
-        if (update.getVersion().compareTo(SystemProperties.get(Constants.PROP_BUILD_VERSION)) < 0) {
-            Log.d(TAG, update.getName() + " is older than current Android version");
-            return false;
-        }
         if (!SystemProperties.getBoolean(Constants.PROP_UPDATER_ALLOW_DOWNGRADING, false) &&
                 update.getTimestamp() <= SystemProperties.getLong(Constants.PROP_BUILD_DATE, 0)) {
             Log.d(TAG, update.getName() + " is older than/equal to the current build");
             return false;
         }
-        if (!update.getType().equalsIgnoreCase(SystemProperties.get(Constants.PROP_RELEASE_TYPE))) {
+        if (!update.getType().equalsIgnoreCase("OFFICIAL")) {
             Log.d(TAG, update.getName() + " has type " + update.getType());
+            return false;
+        }
+        if (!getCodename().equals(SystemProperties.get(Constants.PROP_DEVICE))) {
+            Log.d(TAG, update.getName() + " codename mismatch: update=" + mCodename +
+                    ", device=" + SystemProperties.get(Constants.PROP_DEVICE));
             return false;
         }
         return true;
     }
 
     public static boolean canInstall(UpdateBaseInfo update) {
+        String baseUpdateVersion = getBaseVersion(update.getVersion());
+        String baseSystemVersion = getBaseVersion(SystemProperties.get(Constants.PROP_BUILD_VERSION));
+
+        if (!baseUpdateVersion.equals(baseSystemVersion)) {
+            Log.d(TAG, "Base version mismatch: update=" + baseUpdateVersion + ", system=" + baseSystemVersion);
+            return false;
+        }
+
         return (SystemProperties.getBoolean(Constants.PROP_UPDATER_ALLOW_DOWNGRADING, false) ||
-                update.getTimestamp() > SystemProperties.getLong(Constants.PROP_BUILD_DATE, 0)) &&
-                update.getVersion().equalsIgnoreCase(
-                        SystemProperties.get(Constants.PROP_BUILD_VERSION));
+                update.getTimestamp() > SystemProperties.getLong(Constants.PROP_BUILD_DATE, 0));
+    }
+
+    public static String getBaseVersion(String version) {
+        int dotIndex = version.indexOf(".");
+        return dotIndex != -1 ?
+                version.substring(0, dotIndex) : version;
     }
 
     public static List<UpdateInfo> parseJson(File file, boolean compatibleOnly)
@@ -141,31 +167,21 @@ public class Utils {
     }
 
     public static String getServerURL(Context context) {
-        String incrementalVersion = SystemProperties.get(Constants.PROP_BUILD_VERSION_INCREMENTAL);
         String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
                 SystemProperties.get(Constants.PROP_DEVICE));
-        String type = SystemProperties.get(Constants.PROP_RELEASE_TYPE).toLowerCase(Locale.ROOT);
-
-        String serverUrl = SystemProperties.get(Constants.PROP_UPDATER_URI);
-        if (serverUrl.trim().isEmpty()) {
-            serverUrl = context.getString(R.string.updater_server_url);
-        }
+        String variant = SystemProperties.get(Constants.PROP_ZIP_TYPE);
+        String serverUrl = context.getString(R.string.updater_server_url);
 
         return serverUrl.replace("{device}", device)
-                .replace("{type}", type)
-                .replace("{incr}", incrementalVersion);
+                .replace("{variant}", variant);
     }
 
     public static String getUpgradeBlockedURL(Context context) {
-        String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
-                SystemProperties.get(Constants.PROP_DEVICE));
-        return context.getString(R.string.blocked_update_info_url, device);
+        return context.getString(R.string.blocked_update_info_url);
     }
 
     public static String getChangelogURL(Context context) {
-        String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
-                SystemProperties.get(Constants.PROP_DEVICE));
-        return context.getString(R.string.menu_changelog_url, device);
+        return context.getString(R.string.menu_changelog_url);
     }
 
     public static void triggerUpdate(Context context, String downloadId) {
@@ -380,7 +396,7 @@ public class Utils {
     public static int getUpdateCheckSetting(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         return preferences.getInt(Constants.PREF_AUTO_UPDATES_CHECK_INTERVAL,
-                Constants.AUTO_UPDATES_CHECK_INTERVAL_WEEKLY);
+                Constants.AUTO_UPDATES_CHECK_INTERVAL_DAILY);
     }
 
     public static boolean isUpdateCheckEnabled(Context context) {
@@ -390,9 +406,9 @@ public class Utils {
     public static long getUpdateCheckInterval(Context context) {
         switch (Utils.getUpdateCheckSetting(context)) {
             case Constants.AUTO_UPDATES_CHECK_INTERVAL_DAILY:
+            default:
                 return AlarmManager.INTERVAL_DAY;
             case Constants.AUTO_UPDATES_CHECK_INTERVAL_WEEKLY:
-            default:
                 return AlarmManager.INTERVAL_DAY * 7;
             case Constants.AUTO_UPDATES_CHECK_INTERVAL_MONTHLY:
                 return AlarmManager.INTERVAL_DAY * 30;
@@ -412,5 +428,29 @@ public class Utils {
         }
         // Lineage 20 and up should only be integer values (we don't have minor versions anymore)
         return (floatVersion >= 20) ? String.valueOf((int)floatVersion) : version;
+    }
+
+    public static String getCodename() {
+        return mCodename;
+    }
+
+    public static String getMaintainer() {
+        return mMaintainer;
+    }
+
+    public static String getSupport() {
+        return mSupport;
+    }
+
+    public static String getChangelog() {
+        return mChangelog;
+    }
+
+    public static String getDevice() {
+        return mDevice;
+    }
+
+    public static String getZiptype() {
+        return mZiptype;
     }
 }
