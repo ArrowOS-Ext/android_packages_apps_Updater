@@ -84,12 +84,12 @@ public class Utils {
     // used to initialize UpdateInfo objects
     private static UpdateInfo parseJsonUpdate(JSONObject object) throws JSONException {
         Update update = new Update();
-        update.setTimestamp(object.getLong("datetime"));
+        update.setTimestamp(object.getLong("timestamp"));
         update.setName(object.getString("filename"));
-        update.setDownloadId(object.getString("id"));
-        update.setType(object.getString("romtype"));
+        update.setDownloadId(object.getString("md5"));
+        update.setType(object.getString("buildtype"));
         update.setFileSize(object.getLong("size"));
-        update.setDownloadUrl(object.getString("url"));
+        update.setDownloadUrl(object.getString("download"));
         update.setVersion(object.getString("version"));
         return update;
     }
@@ -163,9 +163,6 @@ public class Utils {
         //String incrementalVersion = SystemProperties.get(Constants.PROP_BUILD_VERSION_INCREMENTAL);
         String device = SystemProperties.get(Constants.PROP_NEXT_DEVICE,
                 SystemProperties.get(Constants.PROP_DEVICE));
-        String type = SystemProperties.get(Constants.PROP_RELEASE_TYPE).toLowerCase(Locale.ROOT);
-        String version = Constants.PROJECT_NAME_PREFIX
-                + SystemProperties.get(Constants.PROP_BUILD_VERSION).split("v")[1].toLowerCase(Locale.ROOT);
         String ziptype = SystemProperties.get(Constants.PROP_ZIP_TYPE).toLowerCase(Locale.ROOT);
 
         // Fallback to vanilla if prop was not found
@@ -177,9 +174,7 @@ public class Utils {
         }
 
         return serverUrl.replace("{device}", device)
-                .replace("{version}", version)
-                .replace("{type}", type)
-                .replace("{ziptype}", ziptype);
+                .replace("{variant}", ziptype);
     }
 
     public static String getChangelogURL(Context context) {
