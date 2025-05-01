@@ -187,9 +187,9 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         TextView headerBuildType = findViewById(R.id.header_build_type);
         String buildType = Utils.getZiptype();
         if (buildType == null || buildType.isEmpty()) {
-                headerBuildType.setText("Unofficial or missing OTA info");
+                headerBuildType.setText(getString(R.string.current_build_type, getString(R.string.build_type_unknown)));
         } else {
-                headerBuildType.setText("Current build type: " + buildType);
+                headerBuildType.setText(getString(R.string.current_build_type, buildType));
         }
 
         TextView headerDeviceName = findViewById(R.id.header_device_name);
@@ -208,10 +208,10 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         TextView MaintainerName = findViewById(R.id.maintainer_name);
         String maintainer = Utils.getMaintainer();
         if (maintainer == null || maintainer.isEmpty()) {
-                MaintainerName.setVisibility(View.GONE);
-        } else {strings.xm
-                MaintainerName.setText(
-                        getString(R.string.maintainer_name, maintainer));
+            MaintainerName.setVisibility(View.GONE);
+        } else {
+            MaintainerName.setText(
+                    getString(R.string.maintainer_name, maintainer));
             MaintainerName.setVisibility(View.VISIBLE);
         }
 
@@ -235,10 +235,10 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         ImageView changelogsImage = findViewById(R.id.device_changelogs);
         String changelogs = Utils.getChangelog();
         if (changelogs == null || changelogs.isEmpty()) {
-            telegramImage.setVisibility(View.GONE);
+            changelogsImage.setVisibility(View.GONE);
         } else {
-            changelogs.setVisibility(View.VISIBLE);
-            changelogs.setOnClickListener(new View.OnClickListener() {
+            changelogsImage.setVisibility(View.VISIBLE);
+            changelogsImage.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);

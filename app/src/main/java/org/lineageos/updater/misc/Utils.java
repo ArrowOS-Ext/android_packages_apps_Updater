@@ -177,7 +177,7 @@ public class Utils {
         String serverUrl = context.getString(R.string.updater_server_url);
 
         return serverUrl.replace("{device}", device)
-                .replace("{variant}", variant)
+                .replace("{variant}", variant);
     }
 
     public static String getUpgradeBlockedURL(Context context) {
