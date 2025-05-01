@@ -188,6 +188,8 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
         String buildType = Utils.getZiptype();
         if (buildType == null || buildType.isEmpty()) {
                 headerBuildType.setText(getString(R.string.current_build_type, getString(R.string.build_type_unknown)));
+                LinearLayout supportLayout=(LinearLayout)this.findViewById(R.id.support_icons);
+                supportLayout.setVisibility(LinearLayout.GONE);
         } else {
                 headerBuildType.setText(getString(R.string.current_build_type, buildType));
         }

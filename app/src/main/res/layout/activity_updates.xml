@@ -105,7 +105,7 @@
                     android:textSize="12sp" />
 
                 <TextView
-                    android:id="@+id/header_build_type"
+                    android:id="@+id/header_last_check"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/header_build_date"
