@@ -32,6 +32,8 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -179,8 +181,73 @@ public class UpdatesActivity extends UpdatesListActivity implements UpdateImport
                 getString(R.string.header_android_version, Build.VERSION.RELEASE));
 
         TextView headerBuildDate = findViewById(R.id.header_build_date);
-        headerBuildDate.setText(StringGenerator.getDateLocalizedUTC(this,
+        headerBuildDate.setText("Current build date: " + StringGenerator.getDateLocalizedUTC(this,
                 DateFormat.LONG, BuildInfoUtils.getBuildDateTimestamp()));
+
+        TextView headerBuildType = findViewById(R.id.header_build_type);
+        String buildType = Utils.getZiptype();
+        if (buildType == null || buildType.isEmpty()) {
+                headerBuildType.setText("Unofficial or missing OTA info");
+        } else {
+                headerBuildType.setText("Current build type: " + buildType);
+        }
+
+        TextView headerDeviceName = findViewById(R.id.header_device_name);
+        String deviceName = Utils.getDevice();
+        String deviceCodename = Utils.getCodename();
+        String codeName = "";
+        if (deviceCodename != null || !deviceCodename.isEmpty()) {
+            codeName = "(" + deviceCodename + ")";
+        }
+        if (deviceName == null || deviceName.isEmpty()) {
+                headerDeviceName.setText("Device Name: Unknown");
+        } else {
+                headerDeviceName.setText("Device Name: " + deviceName + codeName);
+        }
+
+        TextView MaintainerName = findViewById(R.id.maintainer_name);
+        String maintainer = Utils.getMaintainer();
+        if (maintainer == null || maintainer.isEmpty()) {
+                MaintainerName.setVisibility(View.GONE);
+        } else {strings.xm
+                MaintainerName.setText(
+                        getString(R.string.maintainer_name, maintainer));
+            MaintainerName.setVisibility(View.VISIBLE);
+        }
+
+        ImageView forumImage = findViewById(R.id.support_forum);
+        String forum = Utils.getSupport();
+        if (forum == null || forum.isEmpty()) {
+            forumImage.setVisibility(View.GONE);
+        } else {
+            forumImage.setVisibility(View.VISIBLE);
+            forumImage.setOnClickListener(new View.OnClickListener() {
+                 public void onClick(View v) {
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
+                    intent.setData(Uri.parse(forum));
+                    startActivity(intent);
+                }
+            });
+        }
+
+        ImageView changelogsImage = findViewById(R.id.device_changelogs);
+        String changelogs = Utils.getChangelog();
+        if (changelogs == null || changelogs.isEmpty()) {
+            telegramImage.setVisibility(View.GONE);
+        } else {
+            changelogs.setVisibility(View.VISIBLE);
+            changelogs.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.addCategory(Intent.CATEGORY_BROWSABLE);
+                    intent.setData(Uri.parse(changelogs));
+                    startActivity(intent);
+                }
+            });
+        }
 
         if (!mIsTV) {
             // Switch between header title and appbar title minimizing overlaps
